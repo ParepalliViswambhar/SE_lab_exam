@@ -76,8 +76,14 @@
             <label for="date">Event Date:</label>
             <input type="date" id="date" name="date" required>
 
-            <button type="submit">Register Now</button>
+            <button type="submit" id="res"onclick="register">Register Now</button>
         </form>
     </div>
 </body>
 </html>
+<script>
+    function register(){
+        let btn=getElementbyId("res");
+        btn.innerText="Registration success";
+    }
+</script>

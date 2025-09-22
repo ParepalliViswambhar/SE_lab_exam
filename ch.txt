@@ -1,1 +1,206 @@
 hello from child 
+
+
+
+
+
+
+
+
+
+Part II: Maven Java Application Development
+To compile without tests:
+
+Bash
+
+mvn compile
+To create a JAR with dependencies: Add the following plugin to your pom.xml within the <build> section:
+
+XML
+
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>3.2.4</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>shade</goal>
+            </goals>
+            <configuration>
+                <shadedArtifactAttached>true</shadedArtifactAttached>
+                <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>com.example.MainApp</mainClass>
+                    </transformer>
+                </transformers>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+Then, run the package command:
+
+Bash
+
+mvn package
+Part III: Git & GitHub Integration
+Interact with GitHub without password (SSH):
+
+Bash
+
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+cat ~/.ssh/id_rsa.pub
+Copy the output and add it to your GitHub SSH settings.
+
+Bash
+
+ssh -T git@github.com
+Resolve a non-fast-forward merge conflict:
+
+Bash
+
+git merge <branch_name>
+# (Manually edit the conflicted files to resolve the markers)
+git add .
+git commit -m "Resolved merge conflict"
+Rearrange commit history:
+
+Bash
+
+git rebase -i HEAD~2
+# (An editor will open. Change the order of the 'pick' lines.)
+Update a commit message:
+
+Bash
+
+git commit --amend -m "New meaningful message"
+Temporarily revert a file:
+
+Bash
+
+git checkout <commit_hash> -- <file_path>
+Ignore files: Create a .gitignore file and add entries like this:
+
+Bash
+
+# .gitignore file
+*.log
+/target/
+Stash changes:
+
+Bash
+
+git stash
+git checkout <other_branch>
+# (Later, on your original branch)
+git stash pop
+Create and apply a patch file:
+
+Bash
+
+git diff > my_patch.patch
+# (On another local repository)
+git apply my_patch.patch
+Fetch and merge separately:
+
+Bash
+
+git fetch
+git merge origin/<branch_name>
+Amend a previous commit to include a new file:
+
+Bash
+
+git add README.md
+git commit --amend --no-edit
+Part IV: Docker & Deployment Tasks
+Ubuntu Container & Git Installation:
+
+Bash
+
+docker pull ubuntu
+docker run -it -d --name ubuntu-git ubuntu
+docker exec -it ubuntu-git bash -c "apt-get update && apt-get install -y git"
+Dockerfile for Maven Application: Create a file named Dockerfile with the following content:
+
+Dockerfile
+
+# Stage 1: Build the application
+FROM maven:3.8.4-openjdk-17 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package
+
+# Stage 2: Create a smaller runtime image
+FROM openjdk:17-jre-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 9070
+CMD ["java", "-jar", "app.jar"]
+Build the image with:
+
+Bash
+
+docker build -t virtual-event-app .
+Apache Tomcat Deployment:
+
+Bash
+
+docker pull tomcat:9.0-jre11-temurin
+docker run -it -d --name my-tomcat -p 6060:8080 tomcat:9.0-jre11-temurin
+docker cp path/to/your/app.war my-tomcat:/usr/local/tomcat/webapps/
+Configuration Update:
+
+Bash
+
+# To stop and remove the old container
+docker stop <container_name> && docker rm <container_name>
+# (Then run the `docker run` command with the updated port, e.g., -p 7070:8080)
+Push Docker Image to Docker Hub:
+
+Bash
+
+docker login
+docker tag virtual-event-app myusername/virtual-event-app:1.0
+docker push myusername/virtual-event-app:1.0
+Part V: Docker Compose Integration
+Docker Compose for Multi-Container Setup: Create a docker-compose.yml file with this content:
+
+YAML
+
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "9070:9070"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/event_db
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+
+  db:
+    image: mysql:8.0
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: event_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+
+volumes:
+  db_data: {}
+To scale a service, use the following command:
+
+Bash
+
+docker-compose up --scale app=4
+Run Maven-Built Application:
+
+Bash
+
+docker-compose up
